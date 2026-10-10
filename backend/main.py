@@ -252,6 +252,7 @@ class FinalDecision(BaseModel):
     relevant_risk_factors_checked: bool | None = None
     no_conflicting_or_concerning_information: bool | None = None
     possible_cause_indices: list[int] = Field(default_factory=list)
+    first_aid_steps: list[str] = Field(default_factory=list)
 
 
 class OpenGuidance(BaseModel):
@@ -527,7 +528,7 @@ def generate_open_guidance(reply, history, medical_profile):
 
 
 def build_final_assessment(reply, history, medical_profile):
-    """Model matches a checked demo rule; Python supplies the actual actions."""
+    """Match a demo rule and use generated steps, with predefined fallbacks."""
     arabic = reply.language == "ar"
     language_index = int(arabic)
     patient_messages = [
@@ -589,8 +590,17 @@ def build_final_assessment(reply, history, medical_profile):
                             "The five-question limit does not establish sufficiency. "
                             "possible_cause_indices may select zero-based entries from the matching topic's causes "
                             "only when consistent with reported facts. They remain unconfirmed; do not invent causes. "
+                            "first_aid_steps: for a supported non-emergency rule, write 3 to 6 brief, concrete, "
+                            "ordered steps tailored to the reported symptoms and current medical profile. "
+                            "Use the matching checked source passage and its actions as the factual basis; "
+                            "do not invent treatments or add advice unsupported by that guidance. "
+                            "Respect the selected urgency: urgent or routine care must not be replaced by home care. "
+                            "Do not claim that a denied symptom is present or that the patient is safe. "
+                            "For an emergency rule or unknown, leave first_aid_steps empty. "
+                            "Write each step as an instruction, without numbering, URLs, or a generic introductory sentence. "
                             "Do not prescribe medication, dosage, or make a definitive diagnosis. "
-                            f"Write reason in {'Arabic' if arabic else 'English'}, briefly explaining evidence and uncertainty."
+                            f"Write reason and first_aid_steps in {'Arabic' if arabic else 'English'}; "
+                            "reason should briefly explain evidence and uncertainty."
                         ),
                         response_mime_type="application/json", response_schema=FinalDecision,
                         max_output_tokens=2048,
@@ -666,8 +676,18 @@ def build_final_assessment(reply, history, medical_profile):
     }
     card = GUIDANCE[topic]
     used_sources = {card["id"]: {key: card[key] for key in ("id", "title", "url")}}
+    generated_steps = list(dict.fromkeys(
+        step.strip() for step in decision.first_aid_steps if step.strip()
+    ))
+    use_generated_steps = (
+        urgency not in ("emergency", "unable_to_determine")
+        and 3 <= len(generated_steps) <= 6
+    )
     actions = [SourcedAction(instruction=recommendations[urgency][language_index], source_ids=[card["id"]])]
-    if urgency not in ("emergency", "unable_to_determine"):
+    if use_generated_steps:
+        # Generated wording is not individually verified against the cited passages.
+        actions = [SourcedAction(instruction=step, source_ids=[]) for step in generated_steps]
+    elif urgency not in ("emergency", "unable_to_determine"):
         actions += [SourcedAction(instruction=text[language_index], source_ids=[card["id"]]) for text in card["actions"]]
     elif urgency == "emergency":
         emergency = GUIDANCE["emergency"]
@@ -697,8 +717,13 @@ def build_final_assessment(reply, history, medical_profile):
             if arabic else "This is preliminary guidance, not a diagnosis or validated triage assessment.",
             "قواعد العرض محدودة ولم يراجعها مختص سريري. النموذج يفسر الإجابات وقد يخطئ؛ غياب التنبيه لا يثبت السلامة."
             if arabic else "Demo rules are limited and not clinician-reviewed. The model interprets answers and can make mistakes; no detected alert does not establish safety.",
-            "المصادر المختارة تدعم الخطوات العامة ولا تثبت تشخيص حالتك. حد الأسئلة لا يعني اكتمال التقييم."
-            if arabic else "Checked sources support general actions, not a patient diagnosis. The question limit does not establish sufficient assessment.",
+            (
+                "خطوات الإسعاف صاغها الذكاء الاصطناعي ولم تُتحقق مطابقة كل خطوة للمصادر؛ هذه المصادر لا تثبت تشخيص حالتك. حد الأسئلة لا يعني اكتمال التقييم."
+                if arabic else "AI-generated first-aid steps have not been individually verified against the sources; those sources do not establish a patient diagnosis. The question limit does not establish sufficient assessment."
+            ) if use_generated_steps else (
+                "المصادر المختارة تدعم الخطوات العامة ولا تثبت تشخيص حالتك. حد الأسئلة لا يعني اكتمال التقييم."
+                if arabic else "Checked sources support general actions, not a patient diagnosis. The question limit does not establish sufficient assessment."
+            ),
         ],
     )
     return assessment, urgency, list(used_sources.values())

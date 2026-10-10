@@ -2,8 +2,6 @@ import { useState, useCallback } from 'react';
 import * as assessmentModel from '../models/assessmentModel';
 import * as profileModel from '../models/profileModel';
 import ai from '../services/ai';
-import { check as safetyCheck } from '../services/safetyNet';
-import { FALLBACK_CARDS } from '../data/fallbackCards';
 import { useAuth } from './AuthContext';
 
 export function useAssessment(existingId = null) {
@@ -12,27 +10,6 @@ export function useAssessment(existingId = null) {
     existingId ? assessmentModel.get(existingId) : null
   );
   const [loading, setLoading] = useState(false);
-
-  function save(patch) {
-    if (!assessment) return;
-    const updated = assessmentModel.update(assessment.id, patch);
-    setAssessment(updated);
-    return updated;
-  }
-
-  function handleEmergency(reasons) {
-    const card = FALLBACK_CARDS.general;
-    save({
-      status: 'EMERGENCY',
-      emergency: {
-        title: 'حالة طوارئ',
-        reasons,
-        untilHelp: card.steps,
-        avoid: [],
-        sourceIds: [],
-      },
-    });
-  }
 
   async function runStep(data) {
     setLoading(true);
@@ -97,36 +74,6 @@ export function useAssessment(existingId = null) {
   }
 
   const start = useCallback(async ({ text, images }) => {
-    const safety = safetyCheck(text);
-    if (safety.hit) {
-      const a = assessmentModel.create({
-        id: crypto.randomUUID(),
-        userId: user?.id,
-        createdAt: new Date().toISOString(),
-        status: 'EMERGENCY',
-        text,
-        images: images || [],
-        caseLabel: null,
-        confidence: 0,
-        baseAsked: 0,
-        extraRounds: 0,
-        imageFindings: [],
-        profileFactors: [],
-        turns: [],
-        currentQuestion: null,
-        result: null,
-        emergency: {
-          title: 'حالة طوارئ',
-          reasons: safety.reasons,
-          untilHelp: FALLBACK_CARDS.general.steps,
-          avoid: [],
-          sourceIds: [],
-        },
-      });
-      setAssessment(a);
-      return a.id;
-    }
-
     const a = assessmentModel.create({
       id: crypto.randomUUID(),
       userId: user?.id,
@@ -152,14 +99,6 @@ export function useAssessment(existingId = null) {
 
   const answer = useCallback(async ({ answer: answerText, unsure }) => {
     if (!assessment) return;
-
-    if (!unsure) {
-      const safety = safetyCheck(answerText);
-      if (safety.hit) {
-        handleEmergency(safety.reasons);
-        return;
-      }
-    }
 
     const q = assessment.currentQuestion;
     const newTurn = {

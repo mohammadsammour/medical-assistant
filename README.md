@@ -81,8 +81,8 @@ npm --version
 ### 1) Clone the repository
 
 ```bash
-git clone https://github.com/HussamAtharbeh/Medical-Python.git
-cd Medical-Python
+git clone https://github.com/mohammadsammour/medical-assistant.git
+cd medical-assistant
 ```
 
 ### 2) Start the backend (Terminal #1)
@@ -205,7 +205,7 @@ When `status` becomes `"assessment"`, the `assessment` object contains the summa
 ## 🗂️ Project structure
 
 ```
-Medical-Python/
+medical-assistant/
 ├─ README.md             ← this file
 ├─ ARCHITECTURE.md       ← deeper architecture notes
 ├─ docs/AI_CONTRACT.md   ← request/response contract between UI and API

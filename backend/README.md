@@ -371,22 +371,30 @@ Final responses now include one of these preliminary urgency labels:
 | `unable_to_determine` | Explain uncertainty and obtain professional advice. |
 
 `assessment` contains `classification_reason`, `rule_id`, `actions_now`,
-`seek_help_if`, and `possible_explanations`. Each action, warning, and possible
-explanation has `source_ids` pointing to top-level `sources`. `possible_causes`
+`seek_help_if`, and `possible_explanations`. Actions, warnings, and possible
+explanations have `source_ids` pointing to top-level `sources` when individually
+supported. Generated steps use `source_ids: []`; references are not automatically
+attached to unverified model wording. `possible_causes`
 and `warning_signs` remain available as plain-text lists for existing clients.
 Explanations are explicitly unconfirmed. No medications or dosages are supplied.
 
 General chat accepts any symptom. Final demo rules currently cover headache,
-cold-like symptoms, and itchy skin; unmatched complaints return
-`unable_to_determine` rather than inventing a rule. Warning signs can cause an
+cold-like symptoms, and itchy skin. Unmatched complaints use the existing separate
+guidance generator, falling back to `unable_to_determine` if it fails. Warning signs can cause an
 early model emergency alert for other complaints, too. A model alert yields
 `emergency` and `rule_id: "model_emergency_alert"`, without waiting for search
 or an extra classification request. It is not validated triage.
 
 At a non-emergency summary, an additional Gemini call interprets the conversation
-against the short, checked source passages in `GUIDANCE`. Python maps the rule
-ID to a label and selects predefined bilingual actions. The model never writes
-the final action templates or their URLs. Evidence quotes must occur in patient
+against the short, checked source passages in `GUIDANCE` and generates 3 to 6
+ordered first-aid steps in the user's language. This uses the same classification
+call, without an additional provider request. Python maps the rule ID to an urgency
+label, applies the existing checks, and returns the generated steps through
+`assessment.actions_now`. Their source IDs are empty because individual generated
+claims have not been verified. Emergency actions remain predefined so an early
+emergency alert does not wait for another generation request. Missing or incomplete
+steps use the existing predefined actions. The model never supplies source URLs.
+Evidence quotes must occur in patient
 messages; this check does not prove that the model interpreted their meaning
 correctly. Handling negation and conflicts still depends on the model.
 
@@ -414,4 +422,8 @@ head injury; and an unrelated complaint with missing history. Labels must follow
 the reported facts, not the name of the test. Check action/source ID mappings and
 that self-care is refused when required information is unknown. Local mocked
 classification tests verify wiring and fallbacks; live clinical performance is
-not established.
+not established. Run the local generation/fallback regression checks from `backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+```
