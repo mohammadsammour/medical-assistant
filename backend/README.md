@@ -1,5 +1,9 @@
 # Medical AI Chat POC
 
+For the complete website setup, prerequisites, frontend commands, and troubleshooting,
+start with the [main README](../README.md#run-the-website-step-by-step). This document
+provides additional backend examples and implementation details.
+
 Arabic and English chat with conversation memory, structured replies, and up to
 five symptom follow-up questions, personalized using an optional medical profile.
 After the second follow-up answer, chat replies also request general medical information using Gemini's built-in
@@ -10,12 +14,23 @@ depend on model interpretation; these rules have not been clinician-reviewed.
 
 ## Start the app
 
-Run these commands in PowerShell from this project folder:
+Run these commands in PowerShell from the repository's `backend` folder.
+Use Python 3.13 for the tested setup. The virtual environment keeps this project's
+packages separate from other Python projects; activation is optional because the
+commands call its interpreter directly.
 
 ```powershell
-uv sync
-Copy-Item .env.example .env
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
+
+On macOS/Linux, use `python3 -m venv .venv`, then
+`.venv/bin/python -m pip install -r requirements.txt` and
+`[ -f .env ] || cp .env.example .env`.
+The dependency manifest is `requirements.txt`; this repository has no
+`pyproject.toml`, so `uv sync` is not the setup command.
 
 Create a Gemini API key at https://aistudio.google.com/apikey and ensure your API
 project has available quota and access to the configured model. Open `.env` in
@@ -36,8 +51,13 @@ API project; the model name can be changed in `.env`. See Google's current
 Then start the server:
 
 ```powershell
-uv run uvicorn main:app --reload
+.\.venv\Scripts\python.exe -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
+
+On macOS/Linux, replace `.\.venv\Scripts\python.exe` with `.venv/bin/python`.
+Keep this terminal open and start the frontend in a second terminal.
+For development, you can append `--reload`; reloading clears the in-memory
+conversation sessions. Use one backend worker for the demo.
 
 After editing `.env`, restart the server. Copy `.env.example` only on first setup
 so you do not overwrite an existing key.
@@ -98,7 +118,7 @@ receives the first symptom message, its previous question, and your new answer.
 Continue using `demo123` for this conversation. Use a different ID, such as
 `demo456`, to start a new conversation with no previous messages.
 
-The backend should create one unique session ID per conversation and reuse it
+The API client should create one unique session ID per conversation and reuse it
 for all answers in that conversation. The API echoes the ID in each response.
 
 Memory lives in a Python dictionary. Restarting the server or saving code while
@@ -246,7 +266,9 @@ The intended connection is React → your team's backend → this AI API.
 - `chat()` loads history, adds the new message, and saves successful replies.
 - `search_medical_information()` requests Google Search and maps cited statements to provider URLs.
 - `build_final_assessment()` matches checked source passages to a demo rule;
-  Python maps that rule to a label and supplies cited actions and warning signs.
+  Python maps that rule to a label and returns generated first-aid steps when
+  usable, with predefined fallbacks. Generated steps have empty source IDs;
+  predefined actions and warnings carry their reference IDs.
 - Python controls the question limit and refuses self-care when required checks are missing.
 - A small lock keeps simultaneous requests for the same session in order.
 - Provider failures return an HTTP error instead of a made-up answer.

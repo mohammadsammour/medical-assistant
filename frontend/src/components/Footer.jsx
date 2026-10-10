@@ -13,7 +13,7 @@ export default function Footer() {
               <span className="grid place-items-center w-9 h-9 rounded-xl gradient-primary shadow-glow">
                 <HeartPulse size={18} className="text-white" />
               </span>
-              <span className="text-lg font-bold text-white">مساعد</span>
+              <span className="text-lg font-bold text-white">ميديك زيرو</span>
             </div>
             <p className="text-sm text-white/55 leading-relaxed max-w-xs">
               تقييم مبدئي فوري للإسعافات الأولية بالذكاء الاصطناعي — بلغتك وفي أي لحظة.
@@ -47,7 +47,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-5 text-center sm:text-start text-xs text-white/40">
-          © {year} مساعد — جميع الحقوق محفوظة.
+          © {year} ميديك زيرو — جميع الحقوق محفوظة.
         </div>
       </div>
     </footer>

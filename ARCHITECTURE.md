@@ -1,5 +1,12 @@
 # MedicZero — Architecture (Frontend only · Mock data · localStorage)
 
+> Historical design notes for the original frontend/mock prototype. The current
+> app includes a FastAPI backend, always sends symptom assessments to `/ai/chat`,
+> and does not run the old frontend keyword safety net in that flow. Extra rounds,
+> profile extraction, and other planned behavior below are not guarantees of the
+> current integration. See the [main README](README.md#architecture-and-assessment-flow)
+> and [backend documentation](backend/README.md) for current behavior and setup.
+
 > AI first-aid website for Jordan. The user describes an injury (text, image, or both). The site uses their health profile, asks questions until it is sure, then shows: the injury, the risk, what to do, suitable treatments, and whether to go to the ER.
 
 **Simple competition MVP.**

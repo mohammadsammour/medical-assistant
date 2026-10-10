@@ -33,7 +33,7 @@ export default function Topbar() {
             <HeartPulse size={20} className="text-white" />
           </span>
           <span className="flex flex-col leading-none">
-            <span className="text-lg font-bold tracking-tight text-white">مساعد</span>
+            <span className="text-lg font-bold tracking-tight text-white">ميديك زيرو</span>
             <span className="text-[10px] text-white/50 mt-0.5">إسعافات أولية ذكية</span>
           </span>
         </Link>

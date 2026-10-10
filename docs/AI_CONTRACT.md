@@ -1,5 +1,13 @@
 # MedicZero — AI Service Contract
 
+> Historical contract for the original mock frontend and a proposed external
+> service. The current integration uses the stateful FastAPI `/ai/chat` endpoint,
+> not `/v1/assess/step` or `/v1/profile/extract`. `remoteAi.js` translates that
+> response into the frontend shapes described below, but the old confidence,
+> extra-question, treatment, and safety guarantees do not describe the running
+> app. See the [current API reference](../README.md#api-reference) and
+> [backend documentation](../backend/README.md).
+
 This is the agreement between the **website** (React, frontend only, data in localStorage) and the **AI service** (built separately). The website already works against a mock that follows this exact contract. When the AI service implements it, the website switches with `VITE_AI_MODE=remote` and nothing else changes.
 
 > The website calls the AI service **directly from the browser**, so the AI service must **enable CORS** for the website origin (e.g. `http://localhost:5173` and the deployed URL).
