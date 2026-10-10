@@ -47,6 +47,14 @@ and browser-storage keys use `medic-zero` and the `mz_` prefix.
 | History | Assessment records saved in that browser's `localStorage`. |
 | Profile-file upload | Remote extraction is not implemented. The mock extractor returns sample data rather than reading the file. |
 
+### Technology stack
+
+| Layer | Technologies |
+| --- | --- |
+| Frontend | React 19, Vite 8, React Router 7, Tailwind CSS 4 |
+| Backend | Python, FastAPI, Google `google-genai` SDK (Gemini), Pydantic |
+| AI | Google Gemini with Google Search grounding |
+
 There is no database, Docker requirement, or separate authentication server to
 install. You need **two running processes**: the backend API and the frontend
 website. The AI also requires internet access and a configured Gemini API project.
