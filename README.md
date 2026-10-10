@@ -48,8 +48,8 @@
 
 | Layer | Technologies |
 |-------|--------------|
-| **Frontend** | React 19, Vite 8, React Router 7, Tailwind CSS 4, lucide-react, Oxlint |
-| **Backend** | Python, FastAPI, Uvicorn, Google `google-genai` SDK (Gemini), Pydantic, httpx |
+| **Frontend** | React 19, Vite 8, React Router 7, Tailwind CSS 4|
+| **Backend** | Python, FastAPI, Google `google-genai` SDK (Gemini), Pydantic |
 | **AI** | Google Gemini with Google Search grounding |
 
 ---
